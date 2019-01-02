@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+echo 'git takeabeltof'
+git clone https://github.com/wleddy/takeabeltof.git
+echo 'git users'
+git clone https://github.com/wleddy/users.git
+echo 'All cloned'
