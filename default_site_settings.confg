@@ -90,6 +90,8 @@ STATIC_DIRS = [
 ]
 
 ## This list will be PREPENDED to the above static search
+#### if you override this is SUB_DOMAIN_SETTINGS be sure to profide a list:
+####.   'local_static_dirs': ['resource/local8000/static']
 #LOCAL_STATIC_DIRS = [
 #    'resource/localhost/static',
 #]

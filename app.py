@@ -1,6 +1,6 @@
 from flask import Flask, render_template, g, session, url_for, request, redirect, flash, abort
 from flask_mail import Mail
-from shotglass2.base_app import get_app_config, make_db_path, register_www, register_users, user_setup
+from shotglass2 import base_app
 from shotglass2.takeabeltof.database import Database
 from shotglass2.takeabeltof.utils import send_static_file
 from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
@@ -35,57 +35,10 @@ def initalize_all_tables(db=None):
     if not db:
         db = get_db()
         
-    from shotglass2.users.models import init_db as users_init_db 
-    users_init_db(db)
+    base_app.initalize_user_tables(db)
     
-
-def update_config_for_host():
-    # update settings for the requested host
-    #import pdb;pdb.set_trace()
+    ### setup any other tables you need here....
     
-    # if there is no request this function will error out
-    # check to see if the property we need is available
-    request_in_flight = True
-    try:
-        request.url
-    except:
-        request_in_flight = False
-        
-    if request_in_flight and "SUB_DOMAIN_SETTINGS" in app.config and len(app.config["SUB_DOMAIN_SETTINGS"]) > 0:
-        try:
-            server = None
-            for value in app.config['SUB_DOMAIN_SETTINGS']:
-                if value.get('host_name') == request.host:
-                    server = value
-                    break
-
-            if not server:
-                #did not find a server to match, use default
-                raise ValueError
-            
-            for key, value in server.items():
-                app.config[key.upper()] = value
-            
-            # refresh mail since settings changed
-            mail = Mail(app)
-            
-        except:
-            # Will use the default settings
-            if app.config['DEBUG']:
-                #raise ValueError("SUB_DOMAIN_SETTINGS could not be determined")
-                flash("Using Default SUB_DOMAIN_SETTINGS")
-    
-        
-# def get_app_config():
-#     """Returns a copy of the current app.config.
-#     This makes it possible for other modules to get access to the config
-#     with the values as updated for the current host.
-#     Import this method rather than importing app
-#     """
-#     import pdb;pdb.set_trace()
-#     update_config(app)
-#     return app.config
-
     
 def get_db(filespec=None):
     """Return a connection to the database.
@@ -97,7 +50,7 @@ def get_db(filespec=None):
     initialize = False
     if 'db' not in g:
         # test the path, if not found, create it
-        initialize = make_db_path(filespec)
+        initialize = base_app.make_db_path(filespec)
         
     g.db = Database(filespec).connect()
     if initialize:
@@ -118,7 +71,7 @@ def _before():
         
     #import pdb;pdb.set_trace()
     
-    get_app_config(app)
+    base_app.get_app_config(app)
     #update_config(app)
     
     get_db()
@@ -127,7 +80,7 @@ def _before():
     g.user = None
     if 'user' in session:
         g.user = session['user']
-        user_setup()
+        base_app.user_setup() # g.admin now holds access rules
 
 @app.teardown_request
 def _teardown(exception):
@@ -137,10 +90,11 @@ def _teardown(exception):
 
 @app.errorhandler(404)
 def page_not_found(error):
-    from shotglass2.takeabeltof.utils import handle_request_error
-    handle_request_error(error,request,404)
-    g.title = "Page Not Found"
-    return render_template('404.html'), 404
+    return base_app.page_not_found(error)
+    # from shotglass2.takeabeltof.utils import handle_request_error
+    # handle_request_error(error,request,404)
+    # g.title = "Page Not Found"
+    # return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(error):
@@ -149,24 +103,15 @@ def server_error(error):
     g.title = "Server Error"
     return render_template('500.html'), 500
 
-@app.route('/static/<path:filename>')
-def static(filename):
-    """This takes full responsibility for loading static content"""
-        
-    local_path = []
-    if app.config.get('LOCAL_STATIC_DIRS'):
-        local_path = app.config['LOCAL_STATIC_DIRS'] 
-    if app.config.get('STATIC_DIRS'):
-        #append STATIC_DIRS to LOCAL_STATIC_DIRS
-        for folder in app.config.get('STATIC_DIRS'):
-            local_path.append(folder)
-        
-    return send_static_file(filename,path_list=local_path)
+#Register the static route
+app.add_url_rule('/static/<path:filename>','static',base_app.static)
 
 ## Setup the routs for www and users
 # or register your own if you prefer
-register_www(app)
-register_users(app)
+base_app.register_www(app)
+base_app.register_users(app)
+
+
 
 if __name__ == '__main__':
     
