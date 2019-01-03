@@ -82,23 +82,26 @@ DOC_DIRECTORY_LIST = ['','docs','takeabeltof','takeabeltof/docs','users','users/
 #LOCATION_DEFAULT_LAT = 38.54422161206573
 
 # Where to look for static files.
-# Must be a tuple.
-# If you override it in SUB_DOMAIN_SETTINGS, that must be a single tuple so you may need to
-#.  duplicate this data there too.-> ('resource/my_app_name/static', ... ,'resource/static','static',shotglass2/static',)
-LOCAL_STATIC_DIRS = (
+# Must be a list.
+STATIC_DIRS = [
     'resource/static',
     'static',
     'shotglass2/static',
-)
-# Additional template directories to search BEFORE using
+]
+
+## This list will be PREPENDED to the above static search
+#LOCAL_STATIC_DIRS = [
+#    'resource/localhost/static',
+#]
+
+# Template directories to search BEFORE using
 #   the default flask search methods.
-# Should be a tuple of app relative paths to search
-# If you override it in SUB_DOMAIN_SETTINGS, that must be a single tuple so you may need to
-#.  duplicate this data there too.
-LOCAL_TEMPLATE_DIRS = (
+# Must be a list of app relative paths to search
+LOCAL_TEMPLATE_DIRS = [
     'resource/templates',
+    'templates',
     'shotglass2/templates',
-    )
+    ]
 
     
 # A list of dictionaries of settings for sites that share this config and virtualenv

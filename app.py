@@ -1,6 +1,6 @@
 from flask import Flask, render_template, g, session, url_for, request, redirect, flash, abort
 from flask_mail import Mail
-from shotglass2.base_app import update_config, get_app_config, make_db_path, register_www, register_users, user_setup
+from shotglass2.base_app import get_app_config, make_db_path, register_www, register_users, user_setup
 from shotglass2.takeabeltof.database import Database
 from shotglass2.takeabeltof.utils import send_static_file
 from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
@@ -76,15 +76,15 @@ def update_config_for_host():
                 flash("Using Default SUB_DOMAIN_SETTINGS")
     
         
-def get_app_config():
-    """Returns a copy of the current app.config.
-    This makes it possible for other modules to get access to the config
-    with the values as updated for the current host.
-    Import this method rather than importing app
-    """
-    #import pdb;pdb.set_trace()
-    update_config(app)
-    return app.config
+# def get_app_config():
+#     """Returns a copy of the current app.config.
+#     This makes it possible for other modules to get access to the config
+#     with the values as updated for the current host.
+#     Import this method rather than importing app
+#     """
+#     import pdb;pdb.set_trace()
+#     update_config(app)
+#     return app.config
 
     
 def get_db(filespec=None):
@@ -118,7 +118,8 @@ def _before():
         
     #import pdb;pdb.set_trace()
     
-    update_config(app)
+    get_app_config(app)
+    #update_config(app)
     
     get_db()
     
@@ -152,23 +153,14 @@ def server_error(error):
 def static(filename):
     """This takes full responsibility for loading static content"""
         
-    local_path = ()
-    if "LOCAL_STATIC_DIRS" in app.config and isinstance(app.config['LOCAL_STATIC_DIRS'] ,tuple):
+    local_path = []
+    if app.config.get('LOCAL_STATIC_DIRS'):
         local_path = app.config['LOCAL_STATIC_DIRS'] 
-    print(local_path)
-    if "STATIC_DIRS" in app.config and isinstance(app.config['STATIC_DIRS'] ,tuple):
-        #LOCAL_STATIC_DIRS should be a tuple
-        r = local_path,app.config['STATIC_DIRS']
-        l =[]
-        for i in r:
-            for j in i:
-                print("j={}".format(j))
-                l.append(j)
-                
-        local_path = tuple(l)
-    print(local_path)
-        #local_path = app.config['LOCAL_STATIC_DIRS']
-
+    if app.config.get('STATIC_DIRS'):
+        #append STATIC_DIRS to LOCAL_STATIC_DIRS
+        for folder in app.config.get('STATIC_DIRS'):
+            local_path.append(folder)
+        
     return send_static_file(filename,path_list=local_path)
 
 ## Setup the routs for www and users
