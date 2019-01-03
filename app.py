@@ -1,10 +1,11 @@
 from flask import Flask, render_template, g, session, url_for, request, redirect, flash, abort
 from flask_mail import Mail
-from takeabeltof.database import Database
-from takeabeltof.utils import send_static_file
-from takeabeltof.jinja_filters import register_jinja_filters
-from users.models import User,Role,Pref
-from users.admin import Admin
+from shotglass2.base_app import update_config, get_app_config, make_db_path, register_www, register_users, user_setup
+from shotglass2.takeabeltof.database import Database
+from shotglass2.takeabeltof.utils import send_static_file
+from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
+from shotglass2.users.models import User,Role,Pref
+from shotglass2.users.admin import Admin
 import os    
 
 # Create app
@@ -34,7 +35,7 @@ def initalize_all_tables(db=None):
     if not db:
         db = get_db()
         
-    from users.models import init_db as users_init_db 
+    from shotglass2.users.models import init_db as users_init_db 
     users_init_db(db)
     
 
@@ -82,7 +83,7 @@ def get_app_config():
     Import this method rather than importing app
     """
     #import pdb;pdb.set_trace()
-    update_config_for_host()
+    update_config(app)
     return app.config
 
     
@@ -96,17 +97,7 @@ def get_db(filespec=None):
     initialize = False
     if 'db' not in g:
         # test the path, if not found, create it
-        root_path = os.path.dirname(os.path.abspath(__name__))
-        if not os.path.isfile(os.path.join(root_path,filespec)):
-            initialize = True
-            # split it into directories and create them if needed
-            path_list = filespec.split("/")
-            current_path = root_path
-            for d in range(len(path_list)-1):
-                current_path = os.path.join(current_path,path_list[d])
-                if not os.path.isdir(current_path):
-                    os.mkdir(current_path, mode=0o744)
-                    
+        initialize = make_db_path(filespec)
         
     g.db = Database(filespec).connect()
     if initialize:
@@ -124,8 +115,10 @@ def _before():
     #ensure that nothing is served from the instance directory
     if 'instance' in request.url:
         abort(404)
+        
+    #import pdb;pdb.set_trace()
     
-    update_config_for_host()
+    update_config(app)
     
     get_db()
     
@@ -133,20 +126,7 @@ def _before():
     g.user = None
     if 'user' in session:
         g.user = session['user']
-        
-    if 'admin' not in g:
-        g.admin = Admin(g.db)
-        # Add items to the Admin menu
-        # the order here determines the order of display in the menu
-        
-        # a header row must have the some permissions or higher than the items it heads
-        g.admin.register(User,url_for('user.display'),display_name='User Admin',header_row=True,minimum_rank_required=500)
-            
-        g.admin.register(User,url_for('user.display'),display_name='Users',minimum_rank_required=500,roles=['admin',])
-        g.admin.register(Role,url_for('role.display'),display_name='Roles',minimum_rank_required=1000)
-        g.admin.register(Pref,url_for('pref.display'),display_name='Prefs',minimum_rank_required=1000)
-        
-
+        user_setup()
 
 @app.teardown_request
 def _teardown(exception):
@@ -156,14 +136,14 @@ def _teardown(exception):
 
 @app.errorhandler(404)
 def page_not_found(error):
-    from takeabeltof.utils import handle_request_error
+    from shotglass2.takeabeltof.utils import handle_request_error
     handle_request_error(error,request,404)
     g.title = "Page Not Found"
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(error):
-    from takeabeltof.utils import handle_request_error
+    from shotglass2.takeabeltof.utils import handle_request_error
     handle_request_error(error,request,500)
     g.title = "Server Error"
     return render_template('500.html'), 500
@@ -172,20 +152,29 @@ def server_error(error):
 def static(filename):
     """This takes full responsibility for loading static content"""
         
-    local_path = None
-    if "LOCAL_STATIC_FOLDER" in app.config:
-        local_path = app.config['LOCAL_STATIC_FOLDER']
+    local_path = ()
+    if "LOCAL_STATIC_DIRS" in app.config and isinstance(app.config['LOCAL_STATIC_DIRS'] ,tuple):
+        local_path = app.config['LOCAL_STATIC_DIRS'] 
+    print(local_path)
+    if "STATIC_DIRS" in app.config and isinstance(app.config['STATIC_DIRS'] ,tuple):
+        #LOCAL_STATIC_DIRS should be a tuple
+        r = local_path,app.config['STATIC_DIRS']
+        l =[]
+        for i in r:
+            for j in i:
+                print("j={}".format(j))
+                l.append(j)
+                
+        local_path = tuple(l)
+    print(local_path)
+        #local_path = app.config['LOCAL_STATIC_DIRS']
 
-    return send_static_file(filename,local_path=local_path)
+    return send_static_file(filename,path_list=local_path)
 
-from www.views import home
-app.register_blueprint(home.mod)
-
-from users.views import user, login, role, pref
-app.register_blueprint(user.mod)
-app.register_blueprint(login.mod)
-app.register_blueprint(role.mod)
-app.register_blueprint(pref.mod)
+## Setup the routs for www and users
+# or register your own if you prefer
+register_www(app)
+register_users(app)
 
 if __name__ == '__main__':
     
