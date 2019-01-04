@@ -4,9 +4,7 @@ from shotglass2 import base_app
 from shotglass2.takeabeltof.database import Database
 from shotglass2.takeabeltof.utils import send_static_file
 from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
-from shotglass2.users.models import User,Role,Pref
 from shotglass2.users.admin import Admin
-import os    
 
 # Create app
 # setting static_folder to None allows me to handle loading myself
@@ -47,6 +45,11 @@ def get_db(filespec=None):
     if not filespec:
         filespec = app.config['DATABASE_PATH']
         
+    # This is probobly a good place to change the
+    # filespec if you want to use a different database
+    # for the current request.
+    
+        
     initialize = False
     if 'db' not in g:
         # test the path, if not found, create it
@@ -72,7 +75,6 @@ def _before():
     #import pdb;pdb.set_trace()
     
     base_app.get_app_config(app)
-    #update_config(app)
     
     get_db()
     
@@ -80,7 +82,10 @@ def _before():
     g.user = None
     if 'user' in session:
         g.user = session['user']
-        base_app.user_setup() # g.admin now holds access rules
+        
+        
+    g.admin = Admin(g.db) # This is where user access rules are stored
+    base_app.user_setup() # g.admin now holds access rules Users, Prefs and Roles
 
 @app.teardown_request
 def _teardown(exception):
@@ -103,7 +108,6 @@ app.add_url_rule('/static/<path:filename>','static',base_app.static)
 # or register your own if you prefer
 base_app.register_www(app)
 base_app.register_users(app)
-
 
 
 if __name__ == '__main__':
