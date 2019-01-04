@@ -91,22 +91,15 @@ def _teardown(exception):
 @app.errorhandler(404)
 def page_not_found(error):
     return base_app.page_not_found(error)
-    # from shotglass2.takeabeltof.utils import handle_request_error
-    # handle_request_error(error,request,404)
-    # g.title = "Page Not Found"
-    # return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(error):
-    from shotglass2.takeabeltof.utils import handle_request_error
-    handle_request_error(error,request,500)
-    g.title = "Server Error"
-    return render_template('500.html'), 500
+    return base_app.server_error(error)
 
 #Register the static route
 app.add_url_rule('/static/<path:filename>','static',base_app.static)
 
-## Setup the routs for www and users
+## Setup the routes for www and users
 # or register your own if you prefer
 base_app.register_www(app)
 base_app.register_users(app)
