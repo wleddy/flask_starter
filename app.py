@@ -1,6 +1,6 @@
 from flask import Flask, render_template, g, session, url_for, request, redirect, flash, abort
 from flask_mail import Mail
-from shotglass2 import base_app
+from shotglass2 import shotglass
 from shotglass2.takeabeltof.database import Database
 from shotglass2.takeabeltof.utils import send_static_file
 from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
@@ -33,7 +33,7 @@ def initalize_all_tables(db=None):
     if not db:
         db = get_db()
         
-    base_app.initalize_user_tables(db)
+    shotglass.initalize_user_tables(db)
     
     ### setup any other tables you need here....
     
@@ -53,7 +53,7 @@ def get_db(filespec=None):
     initialize = False
     if 'db' not in g:
         # test the path, if not found, create it
-        initialize = base_app.make_db_path(filespec)
+        initialize = shotglass.make_db_path(filespec)
         
     g.db = Database(filespec).connect()
     if initialize:
@@ -74,7 +74,7 @@ def _before():
         
     #import pdb;pdb.set_trace()
     
-    base_app.get_app_config(app)
+    shotglass.get_app_config(app)
     
     get_db()
     
@@ -85,7 +85,7 @@ def _before():
         
         
     g.admin = Admin(g.db) # This is where user access rules are stored
-    base_app.user_setup() # g.admin now holds access rules Users, Prefs and Roles
+    shotglass.user_setup() # g.admin now holds access rules Users, Prefs and Roles
 
 @app.teardown_request
 def _teardown(exception):
@@ -95,19 +95,19 @@ def _teardown(exception):
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return base_app.page_not_found(error)
+    return shotglass.page_not_found(error)
 
 @app.errorhandler(500)
 def server_error(error):
-    return base_app.server_error(error)
+    return shotglass.server_error(error)
 
 #Register the static route
-app.add_url_rule('/static/<path:filename>','static',base_app.static)
+app.add_url_rule('/static/<path:filename>','static',shotglass.static)
 
 ## Setup the routes for www and users
 # or register your own if you prefer
-base_app.register_www(app)
-base_app.register_users(app)
+shotglass.register_www(app)
+shotglass.register_users(app)
 
 
 if __name__ == '__main__':
