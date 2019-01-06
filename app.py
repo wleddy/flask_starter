@@ -107,7 +107,7 @@ app.add_url_rule('/static/<path:filename>','static',shotglass.static)
 
 def wack():
     g.suppress_page_header = True
-    return render_template('markdown.html',rendered_html="<h2>You're a wackadoodle!</h2>")
+    return render_template('index.html',rendered_html="<h2>You're a wackadoodle!</h2>")
 
 def setup_blueprints():
     ## Setup the routes for users
@@ -119,7 +119,7 @@ def setup_blueprints():
     # or cherry pick the ones you want and provide
     # your own for the rest
 
-    ## Define your functions first
+    ## Define your functions first (but not here... )
     #def wack():
     #    g.suppress_page_header = True
     #    return render_template('markdown.html',rendered_html="<h2>You're a wackadoodle!</h2>")
@@ -128,13 +128,14 @@ def setup_blueprints():
     from shotglass2.www.views import home
     home_mod = home.mod 
     routes = home.get_default_routes()
-    routes['/'] = ('/','home',wack) # was ('/','home',home)
+    # The 4th param is usulally {} or {'methods':['GET','PUT',]}
+    routes['/'] = ('/','home',wack,{}) # was ('/','home',home,**options)
     for key, value in routes.items():
-        home_mod.add_url_rule(value[0],value[1],value[2])
+        home_mod.add_url_rule(value[0],value[1],value[2],**value[3])
     
     # Then register them on the app
     app.register_blueprint(home_mod)
-
+    
 
 # app.add_url_rule('/','www.home',home)
 # #import pdb;pdb.set_trace()
