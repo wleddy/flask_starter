@@ -89,6 +89,9 @@ STATIC_DIRS = [
     'shotglass2/static',
 ]
 
+## For Debuging
+#EXPLAIN_TEMPLATE_LOADING = True
+
 ## This list will be PREPENDED to the above static search
 #### if you override this is SUB_DOMAIN_SETTINGS be sure to profide a list:
 ####.   'local_static_dirs': ['resource/local8000/static']
