@@ -105,48 +105,17 @@ def server_error(error):
 #Register the static route
 app.add_url_rule('/static/<path:filename>','static',shotglass.static)
 
-def wack():
-    g.suppress_page_header = True
-    return render_template('index.html',rendered_html="<h2>You're a wackadoodle!</h2>")
+## Setup the routes for users
+shotglass.register_users(app)
 
-def setup_blueprints():
-    ## Setup the routes for users
-    shotglass.register_users(app)
-
-    # Use the default www.routes...
-    #shotglass.register_www(app)
-
-    # or cherry pick the ones you want and provide
-    # your own for the rest
-
-    ## Define your functions first (but not here... )
-    #def wack():
-    #    g.suppress_page_header = True
-    #    return render_template('markdown.html',rendered_html="<h2>You're a wackadoodle!</h2>")
-
-    #Override the routes your interested in
-    from shotglass2.www.views import home
-    home_mod = home.mod 
-    routes = home.get_default_routes()
-    # The 4th param is usulally {} or {'methods':['GET','PUT',]}
-    routes['/'] = ('/','home',wack,{}) # was ('/','home',home,**options)
-    for key, value in routes.items():
-        home_mod.add_url_rule(value[0],value[1],value[2],**value[3])
-    
-    # Then register them on the app
-    app.register_blueprint(home_mod)
-    
-
-# app.add_url_rule('/','www.home',home)
-# #import pdb;pdb.set_trace()
-#app.url_map
+# setup www.routes...
+shotglass.register_www(app)
 
 if __name__ == '__main__':
     
     with app.app_context():
         # create the default database if needed
         initalize_all_tables()
-        setup_blueprints()
         
     #app.run(host='localhost', port=8000)
     app.run()
