@@ -5,7 +5,6 @@ env/
 logs/
 *.sqlite
 instance/
-resource/
 __pycache__
 .pytest_cache
 .coverage
