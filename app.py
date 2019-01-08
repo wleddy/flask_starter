@@ -75,6 +75,7 @@ def _before():
     #import pdb;pdb.set_trace()
     
     shotglass.get_app_config(app)
+    shotglass.set_template_dirs(app)
     
     get_db()
     

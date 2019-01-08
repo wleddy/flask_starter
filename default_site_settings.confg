@@ -92,25 +92,29 @@ STATIC_DIRS = [
 ## For Debuging
 #EXPLAIN_TEMPLATE_LOADING = True
 
-## This list will be PREPENDED to the above static search
-#### if you override this is SUB_DOMAIN_SETTINGS be sure to profide a list:
-####.   'local_static_dirs': ['resource/local8000/static']
-#LOCAL_STATIC_DIRS = [
-#    'resource/localhost/static',
-#]
+## For Debuging
+#EXPLAIN_TEMPLATE_LOADING = True
 
-# Template directories to search BEFORE using
-#   the default flask search methods.
+# Template directories to search FIRST
 # Must be a list of app relative paths to search
-LOCAL_TEMPLATE_DIRS = [
-    'resource/templates',
-    'templates',
-    'shotglass2/templates',
+HOST_TEMPLATE_DIRS = [
+    'resource'
+]
+
+# Template directories to search AFTER HOST_TEMPLATE_DIRS
+# Must be a list of app relative paths to search
+TEMPLATE_DIRS = [
+    'templates/www',
+    'templates/users',
     ]
+    
+# Finally the default Flask search order is used...
+# app.template_folder ('templates') then...
+# each blueprint template_folder in the order blueprints were registered
 
     
 # A list of dictionaries of settings for sites that share this config and virtualenv
-SUB_DOMAIN_SETTINGS = [
+SHARED_HOST_SETTINGS = [
     {"host_name": HOST_NAME, "database_path": DATABASE_PATH, "time_zone": TIME_ZONE, "contact_email_addr": CONTACT_EMAIL_ADDR, "contact_name": CONTACT_NAME},
     ]
 

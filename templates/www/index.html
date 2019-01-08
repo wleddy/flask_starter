@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 {% block title %}Home{% endblock %}
 {% block body %}
+
+{% if rendered_html %}
+{{ rendered_html | safe() }}
+{% endif %}
+
 {% if g.user%}
 <h2>Hello {{g.user}}</h2>
 {% else %}
