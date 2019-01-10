@@ -1,8 +1,7 @@
-from flask import Flask, render_template, g, session, url_for, request, redirect, flash, abort
+from flask import Flask, g, session, request, redirect, flash, abort
 from flask_mail import Mail
 from shotglass2 import shotglass
 from shotglass2.takeabeltof.database import Database
-from shotglass2.takeabeltof.utils import send_static_file
 from shotglass2.takeabeltof.jinja_filters import register_jinja_filters
 from shotglass2.users.admin import Admin
 
@@ -50,10 +49,8 @@ def get_db(filespec=None):
     # for the current request.
     
         
-    initialize = False
-    if 'db' not in g:
-        # test the path, if not found, create it
-        initialize = shotglass.make_db_path(filespec)
+    # test the path, if not found, create it
+    initialize = shotglass.make_db_path(filespec)
         
     g.db = Database(filespec).connect()
     if initialize:
